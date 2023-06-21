@@ -20,16 +20,37 @@ const products = productsFromServer.map((product) => {
   };
 });
 
+const filteredProducts = (args) => {
+  const { fullProducts, searchQuery } = args;
+
+  const preparedSearchQuery = searchQuery.toLowerCase();
+
+  return fullProducts.filter((fullProduct) => {
+    const checkString = `
+      ${fullProduct.name.toLowerCase()}
+    `;
+
+    return checkString.includes(preparedSearchQuery);
+  });
+};
+
 export const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterByUser, setFilterByUser] = useState(0);
   const [filterByCategory, setFilterByCategory] = useState(['All']);
+  const [fullProducts, setFullProducts] = useState(products);
+
+  useState(() => setTimeout(() => setFullProducts(products), 500), []);
 
   const resetAllFilters = () => {
     setSearchQuery('');
     setFilterByUser(0);
     setFilterByCategory(['All']);
   };
+
+  const visibleProducts = filteredProducts(
+    { fullProducts, searchQuery },
+  );
 
   return (
     <div className="section">
@@ -131,9 +152,12 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          <p data-cy="NoMatchingMessage">
-            No products matching selected criteria
-          </p>
+          {visibleProducts.length < 1
+            && (
+              <p data-cy="NoMatchingMessage">
+                No products matching selected criteria
+              </p>
+            )}
 
           <table
             data-cy="ProductTable"
@@ -192,7 +216,7 @@ export const App = () => {
             </thead>
 
             <tbody>
-              {products.map((product) => {
+              {visibleProducts.map((product) => {
                 const {
                   id, name, matchedCategory, matchedUser,
                 } = product;
